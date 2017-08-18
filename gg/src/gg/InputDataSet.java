@@ -1,7 +1,10 @@
 package gg;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Scanner;
 
 // holds one set of dice
@@ -42,6 +45,27 @@ public class InputDataSet {
 		}
 	}
 
+	private Value[] toValueRowArray() {
+
+		Value [] res = new Value[ dice.length * 6 ];
+		int ix = 0 ;
+		LinkedList<Value> ll = new LinkedList<Value>();
+ 
+		for( int row = 0 ; row < dice.length ; row++ )
+		{
+			final int frow = row ;
+ 			Die d = dice[row];
+ 			Integer [] svs = d.sideValues.toArray( new Integer[0] ) ;
+ 					
+ 			for( int ds = 0 ; ds < 6 ; ds++ )
+			{
+		 		ll.add( new Value( svs[ds], row ));
+ 			}
+ 		}
+		return ll.toArray( res );
+ 	}
+
+	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append( "no of dice:" + dice.length + "\n" );
@@ -74,15 +98,33 @@ public class InputDataSet {
 		InputDataSet [] data_sets ;
 		data_sets = new InputDataSet[ sets ];
 		
+		LinkedList<Value> longest = new LinkedList<Value>();
+		
 		for( int ix = 0 ; ix < sets ; ix++ )
 		{
 			data_sets[ ix ] = new InputDataSet( is );
 			System.out.println( data_sets[ ix ].toString() );
+			Value [] all = data_sets[ ix ].toValueRowArray();
+			
+			LinkedList<Value> fl = findLongest( all );
+			if( fl.size() > longest.size() )
+				longest = fl;
+			
 		}
+		
+		
 		
 	}
 	
-	
+	 
+
+	private static LinkedList<Value> findLongest(Value[] all) {
+		Arrays.sort(all);
+		System.out.println( Arrays.toString( all ));
+		// TODO Auto-generated method stub
+		return new LinkedList<Value>();
+	}
+
 	public static void main( String args[] )
 	{
 		InputDataSet.selfTest();

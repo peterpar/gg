@@ -1,16 +1,17 @@
 package gg;
 
-public class Value {
+public class Value implements Comparable<Value> {
 	
-	int value ;
+	int value ;// number on the die
+	int row ; // nth dice
 	
 	Value left=null, right=null, same=null ;
 	
-	public Value( int v )
+	public Value( int v , int row)
 	{
 		value = v ;
-		
-	}
+		this.row = row ;
+ 	}
 	
 	public void setLeft( Value v)
 	{
@@ -25,6 +26,15 @@ public class Value {
 	public void setSame( Value v )
 	{
 		same = v ;
+	}
+
+	@Override
+	public int compareTo(Value o) {
+		return value - o.value ;
+ 	}
+	
+	public String toString() {
+		return "[" + value + "," + row + "] ";
 	}
 
 }
