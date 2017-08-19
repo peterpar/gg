@@ -2,13 +2,20 @@ package gg;
 
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
 
 // holds one set of dice
 public class InputDataSet {
+	
+	HashMap<Integer,HashSet<Integer>> map_value_to_rows = null;
+	boolean [] rows_used ;
+	Value [] current_path;
 	
 	Die [] dice ;
 	
@@ -45,16 +52,18 @@ public class InputDataSet {
 		}
 	}
 
+	/**
+	 * returns array of Values that contain (value,row) information
+	 * @return
+	 */
 	private Value[] toValueRowArray() {
 
 		Value [] res = new Value[ dice.length * 6 ];
-		int ix = 0 ;
-		LinkedList<Value> ll = new LinkedList<Value>();
+ 		LinkedList<Value> ll = new LinkedList<Value>();
  
 		for( int row = 0 ; row < dice.length ; row++ )
 		{
-			final int frow = row ;
- 			Die d = dice[row];
+  			Die d = dice[row];
  			Integer [] svs = d.sideValues.toArray( new Integer[0] ) ;
  					
  			for( int ds = 0 ; ds < 6 ; ds++ )
@@ -106,20 +115,62 @@ public class InputDataSet {
 			System.out.println( data_sets[ ix ].toString() );
 			Value [] all = data_sets[ ix ].toValueRowArray();
 			
-			LinkedList<Value> fl = findLongest( all );
+			LinkedList<Value> fl = data_sets[ ix ].findLongest( all );
 			if( fl.size() > longest.size() )
 				longest = fl;
+ 		}
+ 	}
+	
+	
+	private LinkedList<Integer> findLongest( Integer start_at, Integer max_value, int ix )
+	{
+		HashSet<Integer> rows = map_value_to_rows.get( start_at );
+		Iterator<Integer> it = rows.iterator();
+	
+		while( it.hasNext() )
+		{ 
+			Integer row = it.next();
+			
+			current_path[ ix ].value = start_at;
+			current_path[ ix ].row = row ;
+			
+			rows_used[ row ] = true ;
+			
+			
 			
 		}
 		
-		
-		
 	}
-	
-	 
-
-	private static LinkedList<Value> findLongest(Value[] all) {
-		Arrays.sort(all);
+ 
+	private  LinkedList<Value> findLongest(Value[] all) {
+		Arrays.sort( all );
+		// build index of value to rows
+		map_value_to_rows = new HashMap<Integer,HashSet<Integer>>(100);
+		 
+		AtomicInteger num_rows = new AtomicInteger(0);
+		
+		Arrays.stream( all ).forEach( v -> {
+			HashSet<Integer> hs = map_value_to_rows.get( v.value );
+			if( hs == null )
+			{
+				map_value_to_rows.put( v.value, hs = new HashSet<Integer>() );
+			}
+			hs.add( v.row );
+			if( v.row > num_rows.get() )
+				num_rows.set( v.row );
+		});
+		
+		Integer first = all[0].value ;
+		Integer last = all[ all.length-1 ].value ;
+		
+		rows_used = new boolean[ num_rows.get() ];
+		current_path = new Value[ num_rows.get() ];
+		
+		Arrays.setAll( current_path, ix -> current_path[ix] = new Value(0, 0) );
+		
+		LinkedList<Integer> res = findLongest( first, last, 0 );
+		
+		
 		System.out.println( Arrays.toString( all ));
 		// TODO Auto-generated method stub
 		return new LinkedList<Value>();
