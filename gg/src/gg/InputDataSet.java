@@ -122,22 +122,50 @@ public class InputDataSet {
  	}
 	
 	
-	private LinkedList<Integer> findLongest( Integer start_at, Integer max_value, int ix )
+	private List<Value> findLongest( Integer start_at, Integer max_value, int ix )
 	{
 		HashSet<Integer> rows = map_value_to_rows.get( start_at );
 		Iterator<Integer> it = rows.iterator();
 	
+		current_path[ ix ].value = -1 ; // mark unused
+		
+		if( start_at > max_value )
+			return null ; // we are past the possible values
+		
+		if( !it.hasNext() )
+		{
+			// no rows exist with value start_at so sequence is broken
+			return null;
+		}
+		
+		// try using each of the available rows for that number
 		while( it.hasNext() )
 		{ 
 			Integer row = it.next();
-			
+			if( rows_used[ row ] )
+				continue;
+			// found row with value so use it at our position ix in sequence
 			current_path[ ix ].value = start_at;
 			current_path[ ix ].row = row ;
 			
 			rows_used[ row ] = true ;
 			
+			// now try to extend the list to the next value
 			
-			
+			List<Value> list = findLongest( start_at+1, max_value, ix+1 );
+			if( list == null )
+			{
+				// cannot find another node so return as we are
+				List<Value> lv =  new LinkedList<Value>();
+				Arrays.stream( current_path ).forEach( v -> { 
+					if( v!= null && v.value != -1 ) 
+						lv.add( (Value)v.clone() ); } );
+				return lv ;
+ 			}
+			else
+			{
+				
+			}
 		}
 		
 	}

@@ -7,6 +7,21 @@ public class Value implements Comparable<Value> {
 	
 	Value left=null, right=null, same=null ;
 	
+	public Object clone() 
+	{
+		try {
+		Value v = (Value)super.clone();
+		v.value = value ;
+		v.row = row ;
+		return v ;
+		}
+		catch( Exception  x)
+		{
+			x.printStackTrace();
+			return null ;
+		}
+	}
+	
 	public Value( int v , int row)
 	{
 		value = v ;
