@@ -107,7 +107,7 @@ public class InputDataSet {
 		InputDataSet [] data_sets ;
 		data_sets = new InputDataSet[ sets ];
 		
-		LinkedList<Value> longest = new LinkedList<Value>();
+		List<Value> longest = new LinkedList<Value>();
 		
 		for( int ix = 0 ; ix < sets ; ix++ )
 		{
@@ -115,7 +115,7 @@ public class InputDataSet {
 			System.out.println( data_sets[ ix ].toString() );
 			Value [] all = data_sets[ ix ].toValueRowArray();
 			
-			LinkedList<Value> fl = data_sets[ ix ].findLongest( all );
+			List<Value> fl = data_sets[ ix ].findLongest( all );
 			if( fl.size() > longest.size() )
 				longest = fl;
  		}
@@ -156,7 +156,7 @@ public class InputDataSet {
 			if( list == null )
 			{
 				// cannot find another node so return as we are
-				List<Value> lv =  new LinkedList<Value>();
+				LinkedList<Value> lv =  new LinkedList<Value>();
 				Arrays.stream( current_path ).forEach( v -> { 
 					if( v!= null && v.value != -1 ) 
 						lv.add( (Value)v.clone() ); } );
@@ -170,7 +170,7 @@ public class InputDataSet {
 		
 	}
  
-	private  LinkedList<Value> findLongest(Value[] all) {
+	private  List<Value> findLongest(Value[] all) {
 		Arrays.sort( all );
 		// build index of value to rows
 		map_value_to_rows = new HashMap<Integer,HashSet<Integer>>(100);
@@ -194,9 +194,9 @@ public class InputDataSet {
 		rows_used = new boolean[ num_rows.get() ];
 		current_path = new Value[ num_rows.get() ];
 		
-		Arrays.setAll( current_path, ix -> current_path[ix] = new Value(0, 0) );
+		Arrays.setAll( current_path, ix -> current_path[ix] = new Value(-1, -1) );
 		
-		LinkedList<Integer> res = findLongest( first, last, 0 );
+		List<Value> res = findLongest( first, last, 0 );
 		
 		
 		System.out.println( Arrays.toString( all ));
