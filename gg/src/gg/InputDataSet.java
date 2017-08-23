@@ -14,8 +14,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class InputDataSet {
 	
 	HashMap<Integer,HashSet<Integer>> map_value_to_rows = null;
-	boolean [] rows_used ;
+	Boolean [] rows_used ;
 	Value [] current_path;
+  
 	
 	Die [] dice ;
 	
@@ -170,13 +171,19 @@ public class InputDataSet {
 		
 	}
  
-	private  List<Value> findLongest(Value[] all) {
+	/**
+	 * main entry
+	 * @param all - array of all values sorted by value
+	 * @param no_of_dice - rows
+	 * @return the longest strait
+	 */
+	private  List<Value> findLongest( Value[] all, int no_of_dice ) {
 		Arrays.sort( all );
 		// build index of value to rows
 		map_value_to_rows = new HashMap<Integer,HashSet<Integer>>(100);
-		 
-		AtomicInteger num_rows = new AtomicInteger(0);
-		
+		  
+		// prepare the value to rows mapping index
+		// it tells which dice (rows) contain the indicated value
 		Arrays.stream( all ).forEach( v -> {
 			HashSet<Integer> hs = map_value_to_rows.get( v.value );
 			if( hs == null )
@@ -184,18 +191,25 @@ public class InputDataSet {
 				map_value_to_rows.put( v.value, hs = new HashSet<Integer>() );
 			}
 			hs.add( v.row );
-			if( v.row > num_rows.get() )
-				num_rows.set( v.row );
-		});
+ 		});
 		
+		// figure out the range of values 
 		Integer first = all[0].value ;
 		Integer last = all[ all.length-1 ].value ;
 		
-		rows_used = new boolean[ num_rows.get() ];
-		current_path = new Value[ num_rows.get() ];
+		// array of flags to indicate a used die
+		rows_used = new Boolean[ no_of_dice ];
 		
-		Arrays.setAll( current_path, ix -> current_path[ix] = new Value(-1, -1) );
+		// maintain the current path for copying into result lists
+		current_path = new Value[ no_of_dice ];
 		
+		for( int start_value = first ; start_value <= last ; start_value++  )
+		{
+			Arrays.stream( rows_used ).forEach( x -> x = false );
+			
+			scanAllPathsStartingAt( start_value );
+		}
+		 
 		List<Value> res = findLongest( first, last, 0 );
 		
 		
