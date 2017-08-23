@@ -22,12 +22,25 @@ public class Value implements Comparable<Value> {
 		}
 	}
 	
+	// mark as unused
+	public Value Clear()
+	{
+		value = -1 ;
+		row = -1;
+		return this;
+	}
+	
 	public Value( int v , int row)
 	{
 		value = v ;
 		this.row = row ;
  	}
 	
+	public Value() {
+		Clear();
+		// TODO Auto-generated constructor stub
+	}
+
 	public void setLeft( Value v)
 	{
 		left = v ;

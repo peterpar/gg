@@ -16,7 +16,7 @@ public class InputDataSet {
 	HashMap<Integer,HashSet<Integer>> map_value_to_rows = null;
 	Boolean [] rows_used ;
 	Value [] current_path;
-  
+	ResultsManager rm = null ;
 	
 	Die [] dice ;
 	
@@ -115,62 +115,14 @@ public class InputDataSet {
 			data_sets[ ix ] = new InputDataSet( is );
 			System.out.println( data_sets[ ix ].toString() );
 			Value [] all = data_sets[ ix ].toValueRowArray();
+			int num_dice = data_sets[ix].dice.length;
 			
-			List<Value> fl = data_sets[ ix ].findLongest( all );
+			List<Value> fl = data_sets[ ix ].findLongest( all, num_dice );
 			if( fl.size() > longest.size() )
 				longest = fl;
  		}
  	}
-	
-	
-	private List<Value> findLongest( Integer start_at, Integer max_value, int ix )
-	{
-		HashSet<Integer> rows = map_value_to_rows.get( start_at );
-		Iterator<Integer> it = rows.iterator();
-	
-		current_path[ ix ].value = -1 ; // mark unused
-		
-		if( start_at > max_value )
-			return null ; // we are past the possible values
-		
-		if( !it.hasNext() )
-		{
-			// no rows exist with value start_at so sequence is broken
-			return null;
-		}
-		
-		// try using each of the available rows for that number
-		while( it.hasNext() )
-		{ 
-			Integer row = it.next();
-			if( rows_used[ row ] )
-				continue;
-			// found row with value so use it at our position ix in sequence
-			current_path[ ix ].value = start_at;
-			current_path[ ix ].row = row ;
-			
-			rows_used[ row ] = true ;
-			
-			// now try to extend the list to the next value
-			
-			List<Value> list = findLongest( start_at+1, max_value, ix+1 );
-			if( list == null )
-			{
-				// cannot find another node so return as we are
-				LinkedList<Value> lv =  new LinkedList<Value>();
-				Arrays.stream( current_path ).forEach( v -> { 
-					if( v!= null && v.value != -1 ) 
-						lv.add( (Value)v.clone() ); } );
-				return lv ;
- 			}
-			else
-			{
-				
-			}
-		}
-		
-	}
- 
+	  
 	/**
 	 * main entry
 	 * @param all - array of all values sorted by value
@@ -202,22 +154,62 @@ public class InputDataSet {
 		
 		// maintain the current path for copying into result lists
 		current_path = new Value[ no_of_dice ];
+		Arrays.setAll( current_path, i -> current_path[i] = new Value() ) ;
+		rm = new ResultsManager();
 		
 		for( int start_value = first ; start_value <= last ; start_value++  )
 		{
-			Arrays.stream( rows_used ).forEach( x -> x = false );
-			
-			scanAllPathsStartingAt( start_value );
+			// reset used dice flags
+			Arrays.setAll( rows_used, i -> new Boolean(false));
+		 	Arrays.stream( current_path ).forEach( v -> v.Clear() );
+			scanAllPathsStartingAt( start_value, 0, last, no_of_dice );
 		}
-		 
-		List<Value> res = findLongest( first, last, 0 );
-		
-		
+		  
 		System.out.println( Arrays.toString( all ));
 		// TODO Auto-generated method stub
 		return new LinkedList<Value>();
 	}
 
+	private int scanAllPathsStartingAt( int start_value, int current_die_ix,  int last_value, int num_of_dice )
+	{
+		HashSet<Integer> rows = map_value_to_rows.get( new Integer( start_value ));
+		final int under ;
+		
+		
+		if( (current_die_ix >= num_of_dice) ||
+				(start_value > last_value) ||
+				(rows==null) )
+		{
+			// terminal cases, we are at longest path so register it
+			int v = current_path[0].value ;
+			if( v != -1 )
+			{
+				rm.addResultForStartValue( v, current_path, current_die_ix );
+			}
+			return 0;
+		}
+	 	
+		AtomicInteger ai = new AtomicInteger();
+		ai.set(0);
+		rows.forEach( d -> {
+			int cnt = 0 ;
+			if( !rows_used[d] )
+			{
+				// found an unused dice for start_value
+				// accept it into path
+				current_path[ current_die_ix ] = new Value( start_value, d );
+				rows_used[ d ] = true ;
+
+				// here it does not matter if we failed to go deeper or not
+				ai.addAndGet(  scanAllPathsStartingAt( start_value+1, current_die_ix+1, last_value, num_of_dice ) ) ;
+				rows_used[ d ] = false ; // moving on to a different die
+				current_path[ current_die_ix ].Clear();
+  			}
+		});
+		
+		return 1 + ai.get();
+ 	}
+	
 	public static void main( String args[] )
 	{
 		InputDataSet.selfTest();
