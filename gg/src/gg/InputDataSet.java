@@ -165,6 +165,7 @@ public class InputDataSet {
 			scanAllPathsStartingAt( start_value, 0, last, no_of_dice );
 		}
 		  
+		
 		System.out.println( Arrays.toString( all ));
 		// TODO Auto-generated method stub
 		return new LinkedList<Value>();

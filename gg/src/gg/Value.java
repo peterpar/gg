@@ -10,8 +10,8 @@ public class Value implements Comparable<Value> {
 	public Object clone() 
 	{
 		try {
-			Value v = (Value)super.clone();
-			v.value = value ;
+			Value v = new Value();
+ 			v.value = value ;
 			v.row = row ;
 			return v ;
 		}
