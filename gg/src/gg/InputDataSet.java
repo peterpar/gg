@@ -1,5 +1,7 @@
 package gg;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,7 +19,7 @@ public class InputDataSet {
 	Boolean [] rows_used ;
 	Value [] current_path;
 	ResultsManager rm = null ;
-	
+	int set_num;
 	Die [] dice ;
 	
 	class Die {
@@ -42,8 +44,9 @@ public class InputDataSet {
 		
 	}
 	
-	public InputDataSet( Scanner is )
+	public InputDataSet( Scanner is, int set_num )
 	{
+		this.set_num = set_num;
 		int rows = is.nextInt() ;
 		dice = new Die[ rows ];
 		
@@ -87,9 +90,9 @@ public class InputDataSet {
 		return sb.toString() ;
 	}
 	
-	public static void selfTest() {
-		
-		String test = "3 "+
+	public static void selfTest( File inputFile ) {
+		String test;
+		String testStr = "3 "+
 "4 "+
 "4 8 15 16 23 42 "+
 "8 6 7 5 30 9 "+
@@ -103,7 +106,23 @@ public class InputDataSet {
 "1 2 3 4 5 6 "+
 "1 4 2 6 5 3 " ;
 		
-		Scanner is = new Scanner( test );
+		Scanner is=null;
+		
+		if( inputFile == null )
+		{
+			test = testStr;
+			is = new Scanner( test );
+		}
+		else
+		{
+			try {
+				is = new Scanner( inputFile );
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		 
 		int sets = is.nextInt() ;
 		InputDataSet [] data_sets ;
 		data_sets = new InputDataSet[ sets ];
@@ -112,8 +131,8 @@ public class InputDataSet {
 		
 		for( int ix = 0 ; ix < sets ; ix++ )
 		{
-			data_sets[ ix ] = new InputDataSet( is );
-			System.out.println( data_sets[ ix ].toString() );
+			data_sets[ ix ] = new InputDataSet( is, ix );
+			//System.out.println( data_sets[ ix ].toString() );
 			Value [] all = data_sets[ ix ].toValueRowArray();
 			int num_dice = data_sets[ix].dice.length;
 			
@@ -130,6 +149,7 @@ public class InputDataSet {
 	 * @return the longest strait
 	 */
 	private  List<Value> findLongest( Value[] all, int no_of_dice ) {
+		
 		Arrays.sort( all );
 		// build index of value to rows
 		map_value_to_rows = new HashMap<Integer,HashSet<Integer>>(100);
@@ -155,7 +175,7 @@ public class InputDataSet {
 		// maintain the current path for copying into result lists
 		current_path = new Value[ no_of_dice ];
 		Arrays.setAll( current_path, i -> current_path[i] = new Value() ) ;
-		rm = new ResultsManager();
+		rm = new ResultsManager( set_num + 1 );
 		
 		for( int start_value = first ; start_value <= last ; start_value++  )
 		{
@@ -164,9 +184,11 @@ public class InputDataSet {
 		 	Arrays.stream( current_path ).forEach( v -> v.Clear() );
 			scanAllPathsStartingAt( start_value, 0, last, no_of_dice );
 		}
-		  
+ 		
+		//System.out.println( Arrays.toString( all ));
 		
-		System.out.println( Arrays.toString( all ));
+		System.out.println( rm.toString());
+		 
 		// TODO Auto-generated method stub
 		return new LinkedList<Value>();
 	}
@@ -213,6 +235,11 @@ public class InputDataSet {
 	
 	public static void main( String args[] )
 	{
-		InputDataSet.selfTest();
+		File f;
+		if( args.length == 0 )
+			f = null;
+		else
+			f = new File( args[0] );
+		InputDataSet.selfTest( f );
 	}
 }
