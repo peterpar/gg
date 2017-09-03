@@ -152,7 +152,7 @@ public class InputDataSet {
 		
 		Arrays.sort( all );
 		// build index of value to rows
-		map_value_to_rows = new HashMap<Integer,HashSet<Integer>>(100);
+		map_value_to_rows = new HashMap<Integer,HashSet<Integer>>(1000);
 		  
 		// prepare the value to rows mapping index
 		// it tells which dice (rows) contain the indicated value
@@ -160,7 +160,7 @@ public class InputDataSet {
 			HashSet<Integer> hs = map_value_to_rows.get( v.value );
 			if( hs == null )
 			{
-				map_value_to_rows.put( v.value, hs = new HashSet<Integer>() );
+				map_value_to_rows.put( v.value, hs = new HashSet<Integer>(1000) );
 			}
 			hs.add( v.row );
  		});
@@ -183,7 +183,8 @@ public class InputDataSet {
 			Arrays.setAll( rows_used, i -> new Boolean(false));
 		 	Arrays.stream( current_path ).forEach( v -> v.Clear() );
 			scanAllPathsStartingAt( start_value, 0, last, no_of_dice );
-		}
+			System.out.println("Done:" + start_value  + " up to " + last ) ;
+	 	}
  		
 		//System.out.println( Arrays.toString( all ));
 		
