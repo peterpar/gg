@@ -37,10 +37,17 @@ public class Value implements Comparable<Value> {
  	}
 	
 	public Value() {
-		Clear();
-		// TODO Auto-generated constructor stub
-	}
+		value = -1 ;
+		row = -1;
+  	}
 
+	public void setValue( int v, int row )
+	{
+		this.value = v ;
+		this.row = row ;
+	}
+	
+	/*
 	public void setLeft( Value v)
 	{
 		left = v ;
@@ -54,7 +61,7 @@ public class Value implements Comparable<Value> {
 	public void setSame( Value v )
 	{
 		same = v ;
-	}
+	}*/
 
 	@Override
 	public int compareTo(Value o) {

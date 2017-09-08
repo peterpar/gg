@@ -11,6 +11,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+import gg.ResultsManager.ResultList;
 
 // holds one set of dice
 public class InputDataSet {
@@ -21,6 +24,7 @@ public class InputDataSet {
 	ResultsManager rm = null ;
 	int set_num;
 	Die [] dice ;
+	public static long calls = 0;
 	
 	class Die {
 		
@@ -142,6 +146,73 @@ public class InputDataSet {
  		}
  	}
 	  
+	// all has 
+	// values min ... max in a straight
+	// index tells the dice that can produce that value
+	// v0 ->    d2,      d5
+	// v1 ->    d2,          d7
+	// v2 ->       d3
+	// v3 ->    d2 d3
+ 	// v4 -> d1          d5
+	//
+	
+ 
+	 	
+
+	private boolean  verifyPath( Value [] all, int start, int end,  int [] path,   HashMap<Integer,HashSet<Integer>> index_value_to_dice_nums ) 
+	{
+		return true ;
+	}
+	
+	private List<Value> approachB( Value [] all,  HashMap<Integer,HashSet<Integer>> index_value_to_dice_nums )
+	{
+		// incrementally seek the longest straight and verify each candidate
+		
+		int ix = 0 ;
+		int start = 0 ;
+		int end = 0 ;
+		int maxlen = 0 ;
+		int maxix = all.length-1;
+		
+		// sliding detection of longest straight
+		while( true )
+		{
+			if( end+1 < maxix )
+			{
+				if( all[end].value + 1 == all[end+1].value )
+				{
+					end++;
+				}
+				else
+				{
+					end++;
+					start = end;
+				}
+			}
+			else
+			{
+				start++;
+				if( start == end )
+					break;
+			}
+			
+			int len = end - start +1 ;
+			if( len > maxlen )
+			{
+				int [] path = new int[ len ];
+				// verify it
+				if( verifyPath( all, start, end, path ) )
+				{
+					maxlen = len ;
+					// register this path
+				}
+			}
+			 			
+		}
+		
+		
+	}
+	
 	/**
 	 * main entry
 	 * @param all - array of all values sorted by value
@@ -149,8 +220,15 @@ public class InputDataSet {
 	 * @return the longest strait
 	 */
 	private  List<Value> findLongest( Value[] all, int no_of_dice ) {
+		ResultsManager.trace = true ;
+		
+		if( ResultsManager.trace )
+			System.out.println("start sort of:" + all.length );
 		
 		Arrays.sort( all );
+		if( ResultsManager.trace )
+			System.out.println("Sorted");
+		
 		// build index of value to rows
 		map_value_to_rows = new HashMap<Integer,HashSet<Integer>>(1000);
 		  
@@ -160,14 +238,21 @@ public class InputDataSet {
 			HashSet<Integer> hs = map_value_to_rows.get( v.value );
 			if( hs == null )
 			{
-				map_value_to_rows.put( v.value, hs = new HashSet<Integer>(1000) );
+				map_value_to_rows.put( new Integer( v.value ), hs = new HashSet<Integer>(1000) );
 			}
-			hs.add( v.row );
+			hs.add( new Integer( v.row ) );
  		});
-		
+
+		if( ResultsManager.trace )
+			System.out.println("Prepared index");
 		// figure out the range of values 
 		Integer first = all[0].value ;
 		Integer last = all[ all.length-1 ].value ;
+	
+		
+		return approachB( all, map_value_to_rows );
+		
+		
 		
 		// array of flags to indicate a used die
 		rows_used = new Boolean[ no_of_dice ];
@@ -176,9 +261,12 @@ public class InputDataSet {
 		current_path = new Value[ no_of_dice ];
 		Arrays.setAll( current_path, i -> current_path[i] = new Value() ) ;
 		rm = new ResultsManager( set_num + 1 );
-		
+
+		ResultsManager.trace = false ;
+  		
 		for( int start_value = first ; start_value <= last ; start_value++  )
 		{
+ 
 			// reset used dice flags
 			Arrays.setAll( rows_used, i -> new Boolean(false));
 		 	Arrays.stream( current_path ).forEach( v -> v.Clear() );
@@ -190,48 +278,83 @@ public class InputDataSet {
 		
 		System.out.println( rm.toString());
 		 
-		// TODO Auto-generated method stub
-		return new LinkedList<Value>();
+ 		return new LinkedList<Value>();
 	}
+	
+	public static long  getCheckSum( Value [] array_path ) {
+		 
+		AtomicLong al = new AtomicLong(0);
+		AtomicInteger item = new AtomicInteger(1);
+		Arrays.stream( array_path ).forEach( ix -> {
+			if( ix.value != -1 )
+			{
+				al.addAndGet( ix.row * item.incrementAndGet() );
+	 			al.addAndGet( ix.value * item.incrementAndGet() );
+			}
+		});
+	
+		return al.get();
+  	}
 
 	private int scanAllPathsStartingAt( int start_value, int current_die_ix,  int last_value, int num_of_dice )
 	{
-		HashSet<Integer> rows = map_value_to_rows.get( new Integer( start_value ));
-		final int under ;
-		
+		calls++;
+ 		HashSet<Integer> base_set = map_value_to_rows.get( new Integer( start_value )) ;
+ 		
 		
 		if( (current_die_ix >= num_of_dice) ||
 				(start_value > last_value) ||
-				(rows==null) )
+				(base_set==null) )
 		{
 			// terminal cases, we are at longest path so register it
 			int v = current_path[0].value ;
 			if( v != -1 )
 			{
-				rm.addResultForStartValue( v, current_path, current_die_ix );
+				ResultsManager.trace = true ;
+ 				rm.addResultForStartValue( v, current_path, current_die_ix );
 			}
 			return 0;
 		}
-	 	
-		AtomicInteger ai = new AtomicInteger();
-		ai.set(0);
-		rows.forEach( d -> {
-			int cnt = 0 ;
-			if( !rows_used[d] )
+		
+		HashSet<Integer> rows = (HashSet<Integer>)base_set.clone();
+		 
+		if( ResultsManager.trace && (calls % 10000 == 0) )
+		{
+			System.out.println("loop over:" + rows.size() + " items for start_value:" + start_value + " at depth:" + current_die_ix + " calls=" + calls );
+ 			
+			System.out.println("Current path:" + Arrays.toString( current_path ) ) ;
+ 		}
+		
+		Iterator itr = rows.iterator();
+		boolean found = false;
+		while( itr.hasNext() )
+		{
+ 			Integer iv = (Integer) itr.next();
+  			int d = iv.intValue();
+ 			if( !rows_used[d] )
 			{
-				// found an unused dice for start_value
+ 				found = true;
+  				// found an unused dice for start_value
 				// accept it into path
-				current_path[ current_die_ix ] = new Value( start_value, d );
+				current_path[ current_die_ix ].setValue( start_value, d );
 				rows_used[ d ] = true ;
 
 				// here it does not matter if we failed to go deeper or not
-				ai.addAndGet(  scanAllPathsStartingAt( start_value+1, current_die_ix+1, last_value, num_of_dice ) ) ;
+				scanAllPathsStartingAt( start_value+1, current_die_ix+1, last_value, num_of_dice ) ;
+				
 				rows_used[ d ] = false ; // moving on to a different die
 				current_path[ current_die_ix ].Clear();
   			}
-		});
+		};
 		
-		return 1 + ai.get();
+		if(!found)
+		{
+			ResultsManager.trace = true ;
+
+	 		rm.addResultForStartValue( current_path[0].value, current_path, current_die_ix );
+		}	
+		
+		return 0;
  	}
 	
 	public static void main( String args[] )

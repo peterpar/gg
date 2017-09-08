@@ -7,7 +7,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ResultsManager {
 	
+	int current_max_len = 0;
+	public static boolean trace = false ;
 	int case_num;
+	
+	
 	/**
 	 * holds one list of values (value.row)
 	 * @author peterpar
@@ -22,8 +26,14 @@ public class ResultsManager {
 			result = new LinkedList<Value>();
 			
 			Arrays.stream(src).forEach( x -> { 
-				if( x.value != -1 )  result.add( (Value)(x.clone()) );
+				if( x.value != -1 ) {
+					result.add( (Value)(x.clone()) );
+ 				}
 			});
+			
+			if( trace )
+				System.out.println( result.toString());
+			
 		}
 		
 		public int getLen() {
@@ -41,6 +51,7 @@ public class ResultsManager {
 	
 	public ResultsManager( int case_num )
 	{
+		current_max_len = 0 ;
 		this.case_num = case_num;
 		results = new HashMap<Integer,LinkedList<ResultList>>();
  	}
@@ -59,9 +70,14 @@ public class ResultsManager {
 		 
 	public void addResultForStartValue( Integer start_value, Value[] path, int len  )
 	{
+		if( len <= current_max_len )
+			return ; // dont register differentroutes with existing max len
+		current_max_len = len ;
 		LinkedList<ResultList> llv = insureExists( start_value );
-		llv.add( new ResultList( path, len ));
- 	}
+		ResultList rl = new ResultList( path, len ) ;
+		llv.add( rl );
+		System.out.println("New max len found:" + rl.toString() );
+	}
 	
 	public int getLongestResult()
 	{
